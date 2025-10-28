@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Mini Chat</h2>
+<div id="messages" class="border p-3 mb-3" style="height:300px; overflow:auto;"></div>
+<form id="msgform">
+  <div class="input-group">
+    <input id="content" class="form-control" placeholder="Type a message...">
+    <button class="btn btn-primary">Send</button>
+  </div>
+</form>
+<script>
+async function fetchMessages(){
+  const res = await fetch('/messages');
+  const msgs = await res.json();
+  const container = document.getElementById('messages');
+  container.innerHTML = msgs.map(m => `<div><strong>${m.username}</strong>: ${m.content}</div>`).join('');
+  container.scrollTop = container.scrollHeight;
+}
+
+document.getElementById('msgform').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const content = document.getElementById('content').value;
+  if(!content) return;
+  await fetch('/post_message', {method:'POST', body: new URLSearchParams({content})});
+  document.getElementById('content').value='';
+  fetchMessages();
+});
+// Mini chat polls less frequently
+setInterval(fetchMessages, 5000);
+fetchMessages();
+</script>
+{% endblock %}

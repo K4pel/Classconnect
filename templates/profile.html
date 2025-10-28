@@ -1,0 +1,270 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">Admin Panel</h2>
+                <div class="d-flex gap-2">
+                    <span class="badge bg-primary">{{ pending|length }} Pending</span>
+                    <span class="badge bg-secondary">{{ messages|length }} Messages</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Pending Users Section -->
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="card-title mb-0 d-flex align-items-center">
+                        <i class="fas fa-user-clock text-warning me-2"></i>
+                        Pending Users
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if pending|length == 0 %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-check-circle text-success fa-3x mb-3"></i>
+                        <h5 class="text-muted">No pending users</h5>
+                        <p class="text-muted mb-0">All users have been approved</p>
+                    </div>
+                    {% else %}
+                    <div class="list-group list-group-flush">
+                        {% for u in pending %}
+                        <div class="list-group-item d-flex align-items-center py-3">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-placeholder bg-light rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                        <i class="fas fa-user text-muted"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0">{{ u.username }}</h6>
+                                        <small class="text-muted">Waiting for approval</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <form method="post" action="/admin/approve/{{ u.id }}" class="mb-0">
+                                    <button class="btn btn-success btn-sm" type="submit">
+                                        <i class="fas fa-check me-1"></i>Approve
+                                    </button>
+                                </form>
+                                <form method="post" action="/admin/reject/{{ u.id }}" class="mb-0">
+                                    <button class="btn btn-outline-danger btn-sm" type="submit">
+                                        <i class="fas fa-times me-1"></i>Reject
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Messages Management Section -->
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="card-title mb-0 d-flex align-items-center">
+                        <i class="fas fa-comments text-primary me-2"></i>
+                        Recent Messages
+                    </h5>
+                    <p class="text-muted small mb-0">Admins can delete inappropriate messages</p>
+                </div>
+                <div class="card-body p-0">
+                    {% if messages|length == 0 %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-comment-slash text-muted fa-3x mb-3"></i>
+                        <h5 class="text-muted">No messages yet</h5>
+                    </div>
+                    {% else %}
+                    <div class="list-group list-group-flush" style="max-height: 500px; overflow-y: auto;">
+                        {% for m in messages %}
+                        <div class="list-group-item py-3">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-placeholder bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                        <i class="fas fa-user text-primary small"></i>
+                                    </div>
+                                    <strong class="me-2">{{ m.username }}</strong>
+                                </div>
+                                <small class="text-muted">{{ m.timestamp }}</small>
+                            </div>
+                            <p class="mb-2 text-dark">{{ m.content }}</p>
+                            <div class="d-flex justify-content-end">
+                                <form method="post" action="/admin/delete_message/{{ m.id }}" class="mb-0">
+                                    <button class="btn btn-outline-danger btn-sm" type="submit">
+                                        <i class="fas fa-trash me-1"></i>Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Section -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="card-title mb-0 d-flex align-items-center">
+                        <i class="fas fa-chart-bar text-info me-2"></i>
+                        System Statistics
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3 mb-3">
+                            <div class="border rounded p-3">
+                                <i class="fas fa-users fa-2x text-primary mb-2"></i>
+                                <h4 class="mb-1">{{ total_users }}</h4>
+                                <small class="text-muted">Total Users</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="border rounded p-3">
+                                <i class="fas fa-comments fa-2x text-success mb-2"></i>
+                                <h4 class="mb-1">{{ total_messages }}</h4>
+                                <small class="text-muted">Total Messages</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="border rounded p-3">
+                                <i class="fas fa-user-check fa-2x text-warning mb-2"></i>
+                                <h4 class="mb-1">{{ approved_users }}</h4>
+                                <small class="text-muted">Approved Users</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="border rounded p-3">
+                                <i class="fas fa-clock fa-2x text-danger mb-2"></i>
+                                <h4 class="mb-1">{{ pending|length }}</h4>
+                                <small class="text-muted">Pending Approval</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+:root {
+    --ig-primary: #fafafa;
+    --ig-secondary: #ffffff;
+    --ig-border: #dbdbdb;
+    --ig-text: #262626;
+    --ig-text-light: #8e8e8e;
+    --ig-blue: #0095f6;
+    --ig-blue-hover: #1877f2;
+    --ig-story-gradient: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+}
+
+body {
+    background-color: var(--ig-primary);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.card {
+    border-radius: 12px;
+}
+
+.avatar-placeholder {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+}
+
+.btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.btn-outline-danger {
+    color: #dc3545;
+    border-color: #dc3545;
+}
+
+.btn-outline-danger:hover {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.list-group-item {
+    border-color: rgba(0,0,0,.08);
+    transition: background-color 0.2s;
+}
+
+.list-group-item:hover {
+    background-color: rgba(0,0,0,.02);
+}
+
+.badge {
+    font-size: 0.75rem;
+    padding: 0.35em 0.65em;
+}
+
+.text-muted {
+    color: #8e8e8e !important;
+}
+
+.shadow-sm {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+}
+
+.border {
+    border-color: #e9ecef !important;
+}
+</style>
+
+<script>
+// Add some interactive features
+document.addEventListener('DOMContentLoaded', function() {
+    // Add confirmation for delete actions
+    const deleteForms = document.querySelectorAll('form[action*="delete_message"]');
+    deleteForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            if (!confirm('Are you sure you want to delete this message? This action cannot be undone.')) {
+                e.preventDefault();
+            }
+        });
+    });
+
+    // Add confirmation for reject actions
+    const rejectForms = document.querySelectorAll('form[action*="reject"]');
+    rejectForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            if (!confirm('Are you sure you want to reject this user? This action cannot be undone.')) {
+                e.preventDefault();
+            }
+        });
+    });
+
+    // Auto-refresh pending users list every 30 seconds
+    setInterval(() => {
+        fetch(window.location.href)
+            .then(response => response.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newPendingCount = doc.querySelector('.badge.bg-primary')?.textContent;
+                const currentPendingCount = document.querySelector('.badge.bg-primary')?.textContent;
+                
+                if (newPendingCount !== currentPendingCount) {
+                    location.reload();
+                }
+            })
+            .catch(console.error);
+    }, 30000);
+});
+</script>
+{% endblock %}
