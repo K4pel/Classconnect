@@ -1,0 +1,9 @@
+body { padding-bottom: 40px; }
+.jumbotron { padding: 2rem; }
+#messages div { padding: 4px 0; }
+
+/* Advanced UI tweaks */
+.card { box-shadow: 0 6px 18px rgba(0,0,0,0.08); }
+.navbar-brand { font-weight: 700; }
+.lead { font-size: 1.05rem; }
+.container .card { margin-top: 1rem; }
