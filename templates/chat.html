@@ -235,7 +235,22 @@ socket.on('new_message', (m) => {
     
     if (isRelevantMessage) {
         const isMe = m.user_id === me_id;
-        renderMessage(m, isMe);
+        
+        // Check if this is a temporary message that needs to be updated
+        let foundTempMessage = false;
+        tempMessageIds.forEach(tempId => {
+            const tempElement = document.querySelector(`[data-message-id="${tempId}"]`);
+            if (tempElement && isMe) {
+                // Update the temporary message with the real data
+                updateMessageStatus(tempId, m.id);
+                foundTempMessage = true;
+            }
+        });
+        
+        // If this is not a temporary message, render it normally
+        if (!foundTempMessage) {
+            renderMessage(m, isMe);
+        }
     }
 });
 
@@ -253,10 +268,15 @@ document.getElementById('msgform').addEventListener('submit', async (e) => {
             content: content,
             timestamp: 'Just now',
             user_id: me_id,
-            username: my_username
+            username: my_username,
+            avatar: '/static/img/default-avatar.png'
         };
         
         const tempId = renderMessage(tempMessage, true, true);
+        
+        // Clear input and reply
+        contentInput.value = '';
+        contentInput.focus();
         
         // Send via Socket.IO
         socket.emit('send_message', {
@@ -265,13 +285,11 @@ document.getElementById('msgform').addEventListener('submit', async (e) => {
             recipient_id: recipient_id
         });
         
-        // Clear input and reply
-        contentInput.value = '';
-        contentInput.focus();
-        
     } catch (error) {
         console.error('Error sending message:', error);
         alert('Failed to send message. Please try again.');
+        // Remove the temporary message if sending failed
+        removeTemporaryMessage(tempId);
     }
 });
 

@@ -41,14 +41,6 @@
                             <i class="fas fa-users"></i>
                             View Users
                         </a>
-                        <a href="/study_groups" class="btn-action btn-study-groups">
-                            <i class="fas fa-graduation-cap"></i>
-                            Study Groups
-                        </a>
-                        <a href="#" class="btn-action btn-files">
-                            <i class="fas fa-file-upload"></i>
-                            File Sharing
-                        </a>
                         {% if user.is_admin %}
                         <a href="/admin" class="btn-action btn-admin">
                             <i class="fas fa-shield-alt"></i>
@@ -293,16 +285,6 @@
     color: #6c757d;
 }
 
-.btn-study-groups:hover {
-    border-color: #20c997;
-    color: #20c997;
-}
-
-.btn-files:hover {
-    border-color: #fd7e14;
-    color: #fd7e14;
-}
-
 .btn-admin:hover {
     border-color: #ffc107;
     color: #ffc107;
@@ -315,7 +297,6 @@
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     border: 1px solid var(--ig-border);
     overflow: hidden;
-    margin-bottom: 20px;
 }
 
 .stats-card .card-header {
