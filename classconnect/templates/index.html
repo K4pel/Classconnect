@@ -1,0 +1,605 @@
+{% extends 'base.html' %}
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section">
+  <div class="container">
+    <div class="row align-items-center min-vh-75">
+      <div class="col-lg-6">
+        <h1 class="hero-title">L5 Software Development</h1>
+        <h2 class="hero-subtitle">ClassConnect</h2>
+        <p class="hero-description">A modern chat platform designed exclusively for our class. Connect, collaborate, and communicate seamlessly with your classmates.</p>
+        <div class="hero-actions">
+          <a href="/register" class="btn btn-primary btn-lg">Get Started</a>
+          <a href="/login" class="btn btn-outline-light btn-lg">Sign In</a>
+        </div>
+        <div class="registration-note">
+          <p><i class="fas fa-info-circle"></i> Register with your class username. Usernames starting with "{{ class_code }}" are auto-approved.</p>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="hero-image">
+          <div class="chat-preview">
+            <div class="chat-header">
+              <div class="user-avatar">
+                <img src="https://ui-avatars.com/api/?name=Class+Connect&background=random" alt="Class Connect">
+              </div>
+              <div class="user-info">
+                <h5>Class Connect</h5>
+                <span>Online</span>
+              </div>
+              <div class="chat-actions">
+                <i class="fas fa-video"></i>
+                <i class="fas fa-phone"></i>
+                <i class="fas fa-ellipsis-v"></i>
+              </div>
+            </div>
+            <div class="chat-body">
+              <div class="message received">
+                <div class="message-content">
+                  <p>Welcome to ClassConnect! 👋</p>
+                  <span class="time">10:30 AM</span>
+                </div>
+              </div>
+              <div class="message sent">
+                <div class="message-content">
+                  <p>Hey everyone! Working on the project now</p>
+                  <span class="time">10:32 AM</span>
+                </div>
+              </div>
+              <div class="message received">
+                <div class="message-content">
+                  <p>Let's schedule a study session for Friday</p>
+                  <span class="time">10:33 AM</span>
+                </div>
+              </div>
+            </div>
+            <div class="chat-footer">
+              <div class="message-input">
+                <input type="text" placeholder="Type a message...">
+                <div class="input-actions">
+                  <i class="far fa-smile"></i>
+                  <i class="fas fa-paperclip"></i>
+                  <i class="fas fa-camera"></i>
+                </div>
+              </div>
+              <button class="send-btn">
+                <i class="fas fa-paper-plane"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Features Section -->
+<section class="features-section">
+  <div class="container">
+    <div class="section-header">
+      <h2>Why ClassConnect?</h2>
+      <p>Designed specifically for our class with features that matter</p>
+    </div>
+    <div class="row">
+      <div class="col-md-4 feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-user-friends"></i>
+        </div>
+        <h4>Classmate Network</h4>
+        <p>Connect with everyone in our class. Auto-approval for classmates with class code usernames.</p>
+      </div>
+      <div class="col-md-4 feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-comments"></i>
+        </div>
+        <h4>Flexible Chat Modes</h4>
+        <p>Switch between lightweight mini-chat and full-featured heavy chat based on your needs.</p>
+      </div>
+      <div class="col-md-4 feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-shield-alt"></i>
+        </div>
+        <h4>Admin Managed</h4>
+        <p>Secure environment with admin approval for non-classmate accounts and content moderation.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="how-it-works">
+  <div class="container">
+    <div class="section-header">
+      <h2>How It Works</h2>
+      <p>Get started in just a few simple steps</p>
+    </div>
+    <div class="row steps">
+      <div class="col-md-4 step">
+        <div class="step-number">1</div>
+        <h4>Register</h4>
+        <p>Create your account using your class username or request access if you're new.</p>
+      </div>
+      <div class="col-md-4 step">
+        <div class="step-number">2</div>
+        <h4>Get Approved</h4>
+        <p>Classmates are auto-approved. Others will need admin approval to join.</p>
+      </div>
+      <div class="col-md-4 step">
+        <div class="step-number">3</div>
+        <h4>Start Chatting</h4>
+        <p>Connect with classmates, share resources, and collaborate on projects.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Admin Alert -->
+{% if admin_missing %}
+<section class="admin-alert-section">
+  <div class="container">
+    <div class="admin-alert">
+      <div class="alert-content">
+        <i class="fas fa-exclamation-triangle"></i>
+        <div>
+          <h5>Admin Account Required</h5>
+          <p>No admin account exists yet. Create the initial admin account to manage the system.</p>
+        </div>
+      </div>
+      <a href="/create_admin" class="btn btn-warning">Create Admin Account</a>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<style>
+:root {
+  --primary: #405DE6;
+  --secondary: #5851DB;
+  --accent: #833AB4;
+  --gradient: linear-gradient(45deg, #405DE6, #5851DB, #833AB4, #C13584, #E1306C, #FD1D1D);
+  --light: #f8f9fa;
+  --dark: #262626;
+  --gray: #8e8e8e;
+  --border: #dbdbdb;
+}
+
+body {
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: var(--dark);
+  background-color: #fafafa;
+}
+
+/* Hero Section */
+.hero-section {
+  background: var(--gradient);
+  color: white;
+  padding: 80px 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+  opacity: 0.3;
+}
+
+.min-vh-75 {
+  min-height: 75vh;
+}
+
+.hero-title {
+  font-size: 3.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.hero-subtitle {
+  font-size: 2.5rem;
+  font-weight: 300;
+  margin-bottom: 1.5rem;
+  opacity: 0.9;
+}
+
+.hero-description {
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+  opacity: 0.9;
+  max-width: 90%;
+}
+
+.hero-actions {
+  margin-bottom: 2rem;
+}
+
+.hero-actions .btn {
+  margin-right: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 30px;
+  padding: 0.75rem 2rem;
+  font-weight: 600;
+}
+
+.registration-note {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  padding: 1rem;
+  max-width: 90%;
+}
+
+.registration-note p {
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.registration-note i {
+  margin-right: 0.5rem;
+}
+
+/* Chat Preview */
+.hero-image {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.chat-preview {
+  width: 100%;
+  max-width: 350px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  color: var(--dark);
+}
+
+.chat-header {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  border-bottom: 1px solid var(--border);
+  background: white;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-right: 10px;
+}
+
+.user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.user-info {
+  flex: 1;
+}
+
+.user-info h5 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.user-info span {
+  font-size: 0.8rem;
+  color: var(--gray);
+}
+
+.chat-actions {
+  display: flex;
+  gap: 15px;
+  color: var(--gray);
+}
+
+.chat-body {
+  padding: 15px;
+  height: 250px;
+  overflow-y: auto;
+  background: #f8f9fa;
+}
+
+.message {
+  display: flex;
+  margin-bottom: 15px;
+}
+
+.message.received {
+  justify-content: flex-start;
+}
+
+.message.sent {
+  justify-content: flex-end;
+}
+
+.message-content {
+  max-width: 80%;
+  padding: 10px 15px;
+  border-radius: 18px;
+  position: relative;
+}
+
+.received .message-content {
+  background: white;
+  border-top-left-radius: 5px;
+}
+
+.sent .message-content {
+  background: var(--primary);
+  color: white;
+  border-top-right-radius: 5px;
+}
+
+.message-content p {
+  margin: 0;
+}
+
+.time {
+  font-size: 0.7rem;
+  opacity: 0.7;
+  display: block;
+  margin-top: 5px;
+  text-align: right;
+}
+
+.chat-footer {
+  display: flex;
+  padding: 15px;
+  background: white;
+  border-top: 1px solid var(--border);
+  align-items: center;
+}
+
+.message-input {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.message-input input {
+  width: 100%;
+  border: none;
+  background: #f8f9fa;
+  border-radius: 20px;
+  padding: 10px 15px;
+  outline: none;
+}
+
+.input-actions {
+  position: absolute;
+  right: 10px;
+  display: flex;
+  gap: 10px;
+  color: var(--gray);
+}
+
+.send-btn {
+  background: var(--primary);
+  color: white;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-left: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Features Section */
+.features-section {
+  padding: 80px 0;
+  background: white;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.section-header h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: var(--dark);
+}
+
+.section-header p {
+  font-size: 1.2rem;
+  color: var(--gray);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.feature-card {
+  text-align: center;
+  padding: 30px 20px;
+  border-radius: 15px;
+  transition: transform 0.3s, box-shadow 0.3s;
+  margin-bottom: 30px;
+}
+
+.feature-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+}
+
+.feature-icon {
+  width: 80px;
+  height: 80px;
+  background: var(--gradient);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  color: white;
+  font-size: 2rem;
+}
+
+.feature-card h4 {
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+.feature-card p {
+  color: var(--gray);
+}
+
+/* How It Works */
+.how-it-works {
+  padding: 80px 0;
+  background: #f8f9fa;
+}
+
+.steps {
+  display: flex;
+  justify-content: center;
+}
+
+.step {
+  text-align: center;
+  padding: 0 20px;
+  position: relative;
+}
+
+.step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 40px;
+  right: -10px;
+  width: 50%;
+  height: 2px;
+  background: var(--primary);
+  opacity: 0.3;
+}
+
+.step-number {
+  width: 80px;
+  height: 80px;
+  background: var(--gradient);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  color: white;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.step h4 {
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+.step p {
+  color: var(--gray);
+}
+
+/* Admin Alert */
+.admin-alert-section {
+  padding: 40px 0;
+}
+
+.admin-alert {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.alert-content {
+  display: flex;
+  align-items: center;
+}
+
+.alert-content i {
+  font-size: 2rem;
+  color: #f39c12;
+  margin-right: 15px;
+}
+
+.alert-content h5 {
+  margin: 0 0 5px;
+  color: #856404;
+}
+
+.alert-content p {
+  margin: 0;
+  color: #856404;
+}
+
+.admin-alert .btn {
+  border-radius: 30px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .hero-title {
+    font-size: 2.5rem;
+  }
+  
+  .hero-subtitle {
+    font-size: 2rem;
+  }
+  
+  .step:not(:last-child)::after {
+    display: none;
+  }
+  
+  .admin-alert {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .alert-content {
+    margin-bottom: 15px;
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .alert-content i {
+    margin-right: 0;
+    margin-bottom: 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-section {
+    padding: 60px 0;
+  }
+  
+  .hero-title {
+    font-size: 2rem;
+  }
+  
+  .hero-subtitle {
+    font-size: 1.5rem;
+  }
+  
+  .section-header h2 {
+    font-size: 2rem;
+  }
+  
+  .features-section, .how-it-works {
+    padding: 60px 0;
+  }
+}
+</style>
+{% endblock %}

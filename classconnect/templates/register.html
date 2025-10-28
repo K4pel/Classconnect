@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card mx-auto" style="max-width:520px">
+  <div class="card-body">
+    <h3 class="card-title">Register</h3>
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+    {% if message %}<div class="alert alert-info">{{ message }}</div>{% endif %}
+    <form method="post">
+      <div class="mb-3">
+        <label class="form-label">Username</label>
+        <input class="form-control" name="username" placeholder="Start with {{ class_code }} if you are in our class">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-control" name="password">
+      </div>
+      <button class="btn btn-primary">Register</button>
+    </form>
+    <p class="mt-3">Note: If your username does not start with <strong>{{ class_code }}</strong> you will be registered as pending and an admin must approve you.</p>
+  </div>
+</div>
+{% endblock %}
