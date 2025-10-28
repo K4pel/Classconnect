@@ -40,6 +40,24 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 # Allowed file extensions for avatars
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
+# Extended allowed file extensions for file sharing
+ALLOWED_FILE_EXTENSIONS = {
+    # Images
+    'png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg',
+    # Videos
+    'mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv', 'webm',
+    # Audio
+    'mp3', 'wav', 'ogg', 'flac', 'm4a', 'aac',
+    # Documents
+    'pdf', 'doc', 'docx', 'txt', 'rtf', 'odt',
+    # Spreadsheets
+    'xls', 'xlsx', 'csv',
+    # Presentations
+    'ppt', 'pptx',
+    # Other
+    'zip', 'rar', '7z'
+}
+
 def get_db():
     """Get database connection with row factory"""
     db = getattr(g, '_database', None)
@@ -115,9 +133,14 @@ def close_connection(exception):
         db.close()
 
 def allowed_file(filename):
-    """Check if file extension is allowed"""
+    """Check if file extension is allowed for avatars"""
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def allowed_file_for_sharing(filename):
+    """Check if file extension is allowed for file sharing"""
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_FILE_EXTENSIONS
 
 def save_avatar(file_storage, user_id):
     """Save avatar file and return web path"""
@@ -137,6 +160,26 @@ def save_avatar(file_storage, user_id):
         return f'/static/uploads/{filename}'
     except Exception as e:
         logger.error(f"Error saving avatar: {e}")
+        return None
+
+def save_attachment(file_storage, user_id):
+    """Save attachment file and return web path"""
+    if not file_storage or file_storage.filename == '':
+        return None
+    
+    if not allowed_file_for_sharing(file_storage.filename):
+        return None
+    
+    # Generate secure filename
+    file_ext = file_storage.filename.rsplit('.', 1)[1].lower()
+    filename = f"attachment_{user_id}_{secrets.token_hex(8)}.{file_ext}"
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    
+    try:
+        file_storage.save(filepath)
+        return f'/static/uploads/{filename}'
+    except Exception as e:
+        logger.error(f"Error saving attachment: {e}")
         return None
 
 def get_user_by_id(user_id):
@@ -686,6 +729,32 @@ def get_messages():
     
     return jsonify(messages)
 
+@app.route('/upload_attachment', methods=['POST'])
+@login_required
+def upload_attachment():
+    """Handle file attachment upload"""
+    user = current_user()
+    
+    # Type check to satisfy linter
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file provided'}), 400
+    
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No file selected'}), 400
+    
+    if file and allowed_file_for_sharing(file.filename):
+        attachment_url = save_attachment(file, user['id'])
+        if attachment_url:
+            return jsonify({'url': attachment_url}), 200
+        else:
+            return jsonify({'error': 'Failed to save file'}), 500
+    else:
+        return jsonify({'error': 'File type not allowed'}), 400
+
 # SocketIO Handlers - FIXED VERSION
 @socketio.on('connect')
 def handle_connect():
@@ -778,13 +847,15 @@ def handle_send_message(data):
     content = (data.get('content') or '').strip()
     room = data.get('room')
     recipient_id = data.get('recipient_id')
+    attachment_url = data.get('attachment_url', '')
     
-    if not content:
+    # Either content or attachment must be present
+    if not content and not attachment_url:
         return
     
     # Sanitize content to prevent XSS
     import html
-    content = html.escape(content)
+    content = html.escape(content) if content else ''
     
     try:
         # Save message to database
@@ -793,9 +864,9 @@ def handle_send_message(data):
         timestamp = datetime.now(timezone.utc).isoformat()
         
         cur.execute('''
-            INSERT INTO messages (user_id, username, content, timestamp, recipient_id) 
-            VALUES (?, ?, ?, ?, ?)
-        ''', (user['id'], user['username'], content, timestamp, recipient_id))
+            INSERT INTO messages (user_id, username, content, timestamp, recipient_id, attachment_url) 
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (user['id'], user['username'], content, timestamp, recipient_id, attachment_url))
         
         db.commit()
         
@@ -807,7 +878,8 @@ def handle_send_message(data):
             'timestamp': format_timestamp(timestamp),
             'user_id': user['id'],
             'recipient_id': recipient_id,
-            'avatar': user['avatar'] or '/static/img/default-avatar.png'
+            'avatar': user['avatar'] or '/static/img/default-avatar.png',
+            'attachment_url': attachment_url
         }
         
         # Broadcast message - FIXED: proper room broadcasting
@@ -820,6 +892,17 @@ def handle_send_message(data):
         
     except Exception as e:
         logger.error(f"Error in handle_send_message: {e}")
+
+@socketio.on('upload_attachment')
+def handle_upload_attachment(data):
+    """Handle file attachment upload"""
+    user = current_user()
+    if not user or not user['approved']:
+        return {'error': 'Unauthorized'}
+    
+    # This handler will be called from the client-side with file data
+    # The actual file upload will be handled through a separate HTTP endpoint
+    return {'status': 'ready'}
 
 # Error handlers
 @app.errorhandler(404)
