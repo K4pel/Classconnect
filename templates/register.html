@@ -1,22 +1,159 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="card mx-auto" style="max-width:520px">
-  <div class="card-body">
-    <h3 class="card-title">Register</h3>
-    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
-    {% if message %}<div class="alert alert-info">{{ message }}</div>{% endif %}
-    <form method="post">
-      <div class="mb-3">
-        <label class="form-label">Username</label>
-        <input class="form-control" name="username" placeholder="Start with {{ class_code }} if you are in our class">
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Password</label>
-        <input type="password" class="form-control" name="password">
-      </div>
-      <button class="btn btn-primary">Register</button>
-    </form>
-    <p class="mt-3">Note: If your username does not start with <strong>{{ class_code }}</strong> you will be registered as pending and an admin must approve you.</p>
-  </div>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg border-0 rounded-3">
+                <div class="card-header bg-gradient-primary text-white text-center py-4">
+                    <h2 class="mb-0"><i class="fas fa-user-plus me-2"></i>Create Account</h2>
+                    <p class="mb-0 opacity-75">Join our classroom community</p>
+                </div>
+                <div class="card-body p-4 p-md-5">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                                    <i class="fas fa-exclamation-circle me-2"></i>{{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <form method="post" class="mt-3">
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Username</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="fas fa-user text-primary"></i>
+                                </span>
+                                <input type="text" class="form-control border-start-0 ps-0" name="username" placeholder="Enter your username" required>
+                            </div>
+                            <div class="form-text">
+                                Usernames starting with <strong>{{ class_code }}</strong> are auto-approved.
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="fas fa-lock text-primary"></i>
+                                </span>
+                                <input type="password" class="form-control border-start-0 ps-0" name="password" placeholder="Create a strong password" id="password" required>
+                                <span class="input-group-text bg-light border-start-0 toggle-password" onclick="togglePassword('password')">
+                                    <i class="fas fa-eye text-muted"></i>
+                                </span>
+                            </div>
+                            <div class="form-text">
+                                Password must be at least 8 characters long.
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid mt-5">
+                            <button class="btn btn-primary btn-lg rounded-pill py-3" type="submit">
+                                <i class="fas fa-user-plus me-2"></i>Create Account
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div class="text-center mt-4">
+                        <p class="mb-0">Already have an account? <a href="/login" class="text-decoration-none fw-bold">Sign In</a></p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mt-4 border-0 bg-light rounded-3">
+                <div class="card-body">
+                    <div class="d-flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-info-circle text-primary fa-2x"></i>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="card-title">Registration Note</h5>
+                            <p class="mb-0">If your username does not start with <strong>{{ class_code }}</strong>, you will be registered as pending and an admin must approve you before you can access the platform.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<style>
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #4361ee, #7209b7) !important;
+}
+
+.input-group-text {
+    border-radius: 0.5rem 0 0 0.5rem;
+}
+
+.form-control {
+    border-radius: 0 0.5rem 0.5rem 0;
+    padding: 0.75rem 1rem;
+    border: 1px solid #dee2e6;
+}
+
+.form-control:focus {
+    border-color: #4361ee;
+    box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
+}
+
+.toggle-password {
+    cursor: pointer;
+    border-radius: 0 0.5rem 0.5rem 0;
+}
+
+.toggle-password:hover i {
+    color: #4361ee !important;
+}
+
+.card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important;
+}
+
+.alert {
+    border-radius: 0.5rem;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #4361ee, #7209b7);
+    border: none;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #3a56e0, #6508a3);
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1.5rem rgba(67, 97, 238, 0.4);
+}
+</style>
+
+<script>
+function togglePassword(inputId) {
+    const passwordInput = document.getElementById(inputId);
+    const icon = event.currentTarget.querySelector('i');
+    
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+        icon.classList.remove('text-muted');
+        icon.classList.add('text-primary');
+    } else {
+        passwordInput.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+        icon.classList.remove('text-primary');
+        icon.classList.add('text-muted');
+    }
+}
+</script>
 {% endblock %}

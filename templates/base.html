@@ -51,12 +51,22 @@
 
             <!-- Conversations Link -->
             <li class="nav-item">
-              <a class="nav-link" href="/users">
-                <div class="nav-icon">
-                  <i class="fas fa-comments"></i>
-                  <span class="nav-label">Chats</span>
-                </div>
-              </a>
+                <a class="nav-link" href="/users">
+                    <div class="nav-icon">
+                        <i class="fas fa-comments"></i>
+                        <span class="nav-label">Chats</span>
+                    </div>
+                </a>
+            </li>
+
+            <!-- Study Groups Link -->
+            <li class="nav-item">
+                <a class="nav-link" href="/study_groups">
+                    <div class="nav-icon">
+                        <i class="fas fa-graduation-cap"></i>
+                        <span class="nav-label">Study Groups</span>
+                    </div>
+                </a>
             </li>
 
             <!-- User Dropdown -->
@@ -111,6 +121,20 @@
 
     <!-- Main Content -->
     <main class="main-content">
+      <!-- Flash Messages -->
+      <div class="container mt-3">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+      </div>
+      
       {% block content %}{% endblock %}
     </main>
 
@@ -126,6 +150,44 @@
     --ig-blue: #0095f6;
     --ig-blue-hover: #1877f2;
     --ig-gradient: linear-gradient(45deg, #405DE6, #5851DB, #833AB4, #C13584, #E1306C, #FD1D1D);
+}
+
+/* Flash Messages */
+.alert {
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    margin-bottom: 1rem;
+}
+
+.alert-success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.alert-info {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.alert-warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.alert-danger {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.btn-close {
+    box-shadow: none;
+}
+
+.btn-close:focus {
+    outline: none;
+    box-shadow: none;
 }
 
 /* Modern Navigation Styles */
@@ -312,7 +374,7 @@
     margin-top: 0 !important;
 }
 
-/* Mobile Responsive */
+/* Responsive Design */
 @media (max-width: 768px) {
     .navbar-instagram {
         padding: 12px 0;
@@ -351,6 +413,16 @@
     
     .dropdown-menu {
         width: 200px;
+    }
+    
+    /* Adjust flash messages for mobile */
+    .container.mt-3 {
+        padding: 0 10px;
+    }
+    
+    .alert {
+        font-size: 14px;
+        padding: 12px 15px;
     }
 }
 

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Authentication Forms</title>
+    <title>Login - ClassConnect</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -211,8 +211,8 @@
 <body>
     <div class="container">
         <div class="row justify-content-center">
-            <!-- Login Form -->
-            <div class="col-md-6 mb-5">
+            <!-- Login Form Only -->
+            <div class="col-md-6">
                 <div class="auth-container">
                     <div class="auth-card">
                         <div class="card-header">
@@ -221,19 +221,27 @@
                             <p class="mb-0">Sign in to your account</p>
                         </div>
                         <div class="card-body">
-                            {% if error %}<div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i>{{ error }}</div>{% endif %}
+                            {% with messages = get_flashed_messages(with_categories=true) %}
+                                {% if messages %}
+                                    {% for category, message in messages %}
+                                        <div class="alert alert-{{ 'danger' if category == 'error' else category }}">
+                                            <i class="fas fa-exclamation-circle me-2"></i>{{ message }}
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                            {% endwith %}
                             <form method="post">
                                 <div class="mb-3">
                                     <label class="form-label">Username</label>
                                     <div class="input-group">
-                                        <input class="form-control" name="username" placeholder="Enter your username">
+                                        <input class="form-control" name="username" placeholder="Enter your username" required>
                                         <span class="input-icon"><i class="fas fa-user"></i></span>
                                     </div>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Password</label>
                                     <div class="input-group">
-                                        <input type="password" class="form-control" name="password" placeholder="Enter your password" id="loginPassword">
+                                        <input type="password" class="form-control" name="password" placeholder="Enter your password" id="loginPassword" required>
                                         <span class="input-icon toggle-password" onclick="togglePassword('loginPassword')">
                                             <i class="fas fa-eye"></i>
                                         </span>
@@ -259,53 +267,7 @@
                             </div>
                             
                             <div class="auth-footer">
-                                Don't have an account? <a href="#">Register here</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Registration Form -->
-            <div class="col-md-6">
-                <div class="auth-container">
-                    <div class="auth-card">
-                        <div class="card-header">
-                            <i class="fas fa-user-plus brand-logo"></i>
-                            <h3 class="card-title mb-0">Create Account</h3>
-                            <p class="mb-0">Join our community today</p>
-                        </div>
-                        <div class="card-body">
-                            {% if error %}<div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i>{{ error }}</div>{% endif %}
-                            {% if message %}<div class="alert alert-info"><i class="fas fa-info-circle me-2"></i>{{ message }}</div>{% endif %}
-                            <form method="post">
-                                <div class="mb-3">
-                                    <label class="form-label">Username</label>
-                                    <div class="input-group">
-                                        <input class="form-control" name="username" placeholder="Start with CS101 if you are in our class">
-                                        <span class="input-icon"><i class="fas fa-user"></i></span>
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Password</label>
-                                    <div class="input-group">
-                                        <input type="password" class="form-control" name="password" placeholder="Create a strong password" id="registerPassword">
-                                        <span class="input-icon toggle-password" onclick="togglePassword('registerPassword')">
-                                            <i class="fas fa-eye"></i>
-                                        </span>
-                                    </div>
-                                </div>
-                                <button class="btn btn-primary mt-3">
-                                    <i class="fas fa-user-plus me-2"></i>Register
-                                </button>
-                            </form>
-                            
-                            <div class="note-box">
-                                <p class="mb-0"><i class="fas fa-info-circle me-2 text-primary"></i>If your username does not start with <strong>CS101</strong> you will be registered as pending and an admin must approve you.</p>
-                            </div>
-                            
-                            <div class="auth-footer">
-                                Already have an account? <a href="#">Sign in here</a>
+                                Don't have an account? <a href="/register">Register here</a>
                             </div>
                         </div>
                     </div>
