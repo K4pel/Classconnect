@@ -350,7 +350,7 @@
     <script>
         function togglePassword(inputId) {
             const passwordInput = document.getElementById(inputId);
-            const icon = event.currentTarget.querySelector('i');
+            const icon = passwordInput.parentElement.querySelector('.toggle-password i');
             
             if (passwordInput.type === 'password') {
                 passwordInput.type = 'text';

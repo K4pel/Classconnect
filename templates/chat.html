@@ -102,6 +102,16 @@ const container = document.getElementById('messages');
 let replyToMessage = null;
 let tempMessageIds = new Set();
 
+// Initialize Socket.IO with proper configuration
+const socket = io({
+    transports: ['websocket', 'polling'],
+    upgrade: true,
+    reconnection: true,
+    reconnectionAttempts: 5,
+    reconnectionDelay: 1000,
+    timeout: 20000
+});
+
 function renderMessage(m, isMe = false, isTemporary = false) {
     const messageDiv = document.createElement('div');
     const messageId = m.id || `temp_${Date.now()}`;
@@ -325,8 +335,29 @@ async function loadHistory() {
 
 // Socket.IO event handlers
 socket.on('connect', () => {
-    console.log('Connected to server');
+    console.log('Connected to server with ID:', socket.id);
+    // Join the room after connection
     socket.emit('join', { room: room });
+});
+
+socket.on('disconnect', (reason) => {
+    console.log('Disconnected:', reason);
+    if (reason === 'io server disconnect') {
+        // Server disconnected, need to manually reconnect
+        socket.connect();
+    }
+});
+
+socket.on('connect_error', (error) => {
+    console.error('Connection error:', error);
+    // Show user-friendly error message
+    container.innerHTML = `
+        <div class="empty-chat">
+            <i class="fas fa-exclamation-triangle"></i>
+            <p>Connection error. Please refresh the page.</p>
+            <small>Error: ${error.message}</small>
+        </div>
+    `;
 });
 
 socket.on('new_message', (m) => {
@@ -335,7 +366,8 @@ socket.on('new_message', (m) => {
     // Check if this message belongs to current chat
     const isRelevantMessage = 
         (m.user_id === me_id && m.recipient_id === recipient_id) ||
-        (m.user_id === recipient_id && m.recipient_id === me_id);
+        (m.user_id === recipient_id && m.recipient_id === me_id) ||
+        (!m.recipient_id && room === 'public'); // For public chat rooms
     
     if (isRelevantMessage) {
         const isMe = m.user_id === me_id;
@@ -385,6 +417,9 @@ document.getElementById('msgform').addEventListener('submit', async (e) => {
         contentInput.value = '';
         contentInput.focus();
         
+        // Reset input height
+        contentInput.style.height = 'auto';
+        
         // Hide attachment preview and clear file input
         document.getElementById('attachmentPreview').style.display = 'none';
         document.getElementById('fileInput').value = '';
@@ -406,18 +441,19 @@ document.getElementById('msgform').addEventListener('submit', async (e) => {
     }
 });
 
-// Socket.IO error handling
-socket.on('connect_error', (error) => {
-    console.error('Connection error:', error);
-    alert('Connection error. Please refresh the page.');
+// Handle user joining/leaving
+socket.on('user_joined', (data) => {
+    console.log('User joined:', data);
+    // Update UI to show user is online
+    document.querySelector('.user-status').textContent = 'Online';
+    document.querySelector('.online-status').style.background = '#4ade80';
 });
 
-socket.on('disconnect', (reason) => {
-    console.log('Disconnected:', reason);
-    if (reason === 'io server disconnect') {
-        // Server disconnected, need to manually reconnect
-        socket.connect();
-    }
+socket.on('user_left', (data) => {
+    console.log('User left:', data);
+    // Update UI to show user is offline
+    document.querySelector('.user-status').textContent = 'Offline';
+    document.querySelector('.online-status').style.background = '#9ca3af';
 });
 
 // Auto-resize input
@@ -518,8 +554,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Load initial messages
-loadHistory();
+// Load initial messages when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    loadHistory();
+});
+
 </script>
 
 <style>

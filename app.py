@@ -215,10 +215,15 @@ def meta_set(key, value):
 
 def admin_exists():
     """Check if admin user exists"""
-    db = get_db()
-    cur = db.cursor()
-    cur.execute('SELECT id FROM users WHERE is_admin = 1 LIMIT 1')
-    return cur.fetchone() is not None
+    try:
+        db = get_db()
+        cur = db.cursor()
+        cur.execute('SELECT id FROM users WHERE is_admin = 1 LIMIT 1')
+        result = cur.fetchone()
+        return result is not None
+    except Exception as e:
+        logger.error(f"Error in admin_exists: {e}")
+        return False
 
 def login_required(f):
     """Decorator to require login"""
@@ -272,9 +277,16 @@ def format_timestamp(timestamp_str):
 @app.route('/')
 def index():
     """Home page"""
-    return render_template('index.html', 
-                         class_code=CLASS_CODE, 
-                         admin_missing=not admin_exists())
+    try:
+        return render_template('index.html', 
+                             class_code=CLASS_CODE, 
+                             admin_missing=not admin_exists())
+    except Exception as e:
+        logger.error(f"Error in index route: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
+        # Return a simple response if template rendering fails
+        return "Welcome to ClassConnect! <a href='/login'>Login</a> | <a href='/register'>Register</a>", 200
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
