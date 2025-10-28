@@ -15,6 +15,8 @@
             --dark-color: #212529;
             --success-color: #4cc9f0;
             --gradient: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            --card-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            --input-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
         }
         
         body {
@@ -23,6 +25,7 @@
             display: flex;
             align-items: center;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
         }
         
         .auth-container {
@@ -34,21 +37,22 @@
         .auth-card {
             border: none;
             border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            box-shadow: var(--card-shadow);
             overflow: hidden;
             background: white;
-            transition: transform 0.3s ease;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         
         .auth-card:hover {
             transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
         }
         
         .card-header {
             background: var(--gradient);
             color: white;
             text-align: center;
-            padding: 2rem 1rem;
+            padding: 2.5rem 1rem;
             border-bottom: none;
         }
         
@@ -60,39 +64,69 @@
             font-weight: 600;
             color: var(--dark-color);
             margin-bottom: 0.5rem;
+            font-size: 0.95rem;
         }
         
         .form-control {
-            border-radius: 10px;
-            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            padding: 0.85rem 1.25rem;
             border: 2px solid #e9ecef;
             transition: all 0.3s;
+            font-size: 1rem;
+            height: auto;
         }
         
         .form-control:focus {
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
+            box-shadow: var(--input-shadow);
+        }
+        
+        .input-group {
+            position: relative;
+        }
+        
+        .input-group-text {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-right: none;
+            border-radius: 12px 0 0 12px;
+            padding: 0.85rem 1rem;
+            color: var(--primary-color);
+            font-size: 1.1rem;
+        }
+        
+        .form-control {
+            border-left: none;
+            border-radius: 0 12px 12px 0;
         }
         
         .btn-primary {
             background: var(--gradient);
             border: none;
-            border-radius: 10px;
-            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            padding: 0.85rem 1.5rem;
             font-weight: 600;
             width: 100%;
             transition: all 0.3s;
+            font-size: 1.1rem;
+            letter-spacing: 0.5px;
         }
         
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 7px 14px rgba(67, 97, 238, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(67, 97, 238, 0.3);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(-1px);
         }
         
         .alert {
-            border-radius: 10px;
+            border-radius: 12px;
             border: none;
-            padding: 1rem 1.25rem;
+            padding: 1.25rem 1.5rem;
+            font-size: 0.95rem;
+            font-weight: 500;
         }
         
         .alert-danger {
@@ -105,45 +139,54 @@
             color: #0dcaf0;
         }
         
-        .note-box {
-            background-color: rgba(67, 97, 238, 0.05);
-            border-radius: 10px;
-            padding: 1rem;
-            margin-top: 1.5rem;
-            border-left: 4px solid var(--primary-color);
-        }
-        
-        .input-group {
-            position: relative;
-        }
-        
-        .input-icon {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #6c757d;
-        }
-        
         .brand-logo {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
             display: inline-block;
             background: var(--gradient);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
         
+        .card-title {
+            font-weight: 700;
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .card-subtitle {
+            opacity: 0.9;
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+        
         .toggle-password {
             cursor: pointer;
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+            font-size: 1.2rem;
+            background: none;
+            border: none;
+            padding: 0.5rem;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+        
+        .toggle-password:hover {
+            background: rgba(0, 0, 0, 0.05);
+            color: var(--primary-color);
         }
         
         .divider {
             display: flex;
             align-items: center;
             text-align: center;
-            margin: 1.5rem 0;
+            margin: 2rem 0;
             color: #6c757d;
+            font-size: 0.9rem;
         }
         
         .divider::before,
@@ -154,23 +197,23 @@
         }
         
         .divider:not(:empty)::before {
-            margin-right: .5em;
+            margin-right: 1rem;
         }
         
         .divider:not(:empty)::after {
-            margin-left: .5em;
+            margin-left: 1rem;
         }
         
         .social-login {
             display: flex;
             justify-content: center;
-            gap: 1rem;
-            margin-top: 1rem;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
         }
         
         .social-btn {
-            width: 45px;
-            height: 45px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -178,32 +221,51 @@
             border: 1px solid #dee2e6;
             background: white;
             transition: all 0.3s;
+            font-size: 1.3rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
         }
         
         .social-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
         }
         
         .auth-footer {
             text-align: center;
-            margin-top: 1.5rem;
+            margin-top: 2rem;
             color: #6c757d;
+            font-size: 1rem;
         }
         
         .auth-footer a {
             color: var(--primary-color);
             text-decoration: none;
             font-weight: 600;
+            transition: all 0.2s;
         }
         
         .auth-footer a:hover {
             text-decoration: underline;
+            color: var(--secondary-color);
+        }
+        
+        .form-text {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-top: 0.5rem;
         }
         
         @media (max-width: 576px) {
+            body {
+                padding: 15px;
+            }
+            
             .card-body {
-                padding: 1.5rem;
+                padding: 2rem 1.5rem;
+            }
+            
+            .card-header {
+                padding: 2rem 1rem;
             }
         }
     </style>
@@ -212,43 +274,52 @@
     <div class="container">
         <div class="row justify-content-center">
             <!-- Login Form Only -->
-            <div class="col-md-6">
+            <div class="col-md-8 col-lg-6">
                 <div class="auth-container">
                     <div class="auth-card">
                         <div class="card-header">
                             <i class="fas fa-user-circle brand-logo"></i>
                             <h3 class="card-title mb-0">Welcome Back</h3>
-                            <p class="mb-0">Sign in to your account</p>
+                            <p class="card-subtitle mb-0">Sign in to your account</p>
                         </div>
                         <div class="card-body">
                             {% with messages = get_flashed_messages(with_categories=true) %}
                                 {% if messages %}
                                     {% for category, message in messages %}
-                                        <div class="alert alert-{{ 'danger' if category == 'error' else category }}">
+                                        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show">
                                             <i class="fas fa-exclamation-circle me-2"></i>{{ message }}
+                                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                         </div>
                                     {% endfor %}
                                 {% endif %}
                             {% endwith %}
                             <form method="post">
-                                <div class="mb-3">
+                                <div class="mb-4">
                                     <label class="form-label">Username</label>
                                     <div class="input-group">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-user"></i>
+                                        </span>
                                         <input class="form-control" name="username" placeholder="Enter your username" required>
-                                        <span class="input-icon"><i class="fas fa-user"></i></span>
                                     </div>
                                 </div>
-                                <div class="mb-3">
+                                <div class="mb-4">
                                     <label class="form-label">Password</label>
                                     <div class="input-group">
-                                        <input type="password" class="form-control" name="password" placeholder="Enter your password" id="loginPassword" required>
-                                        <span class="input-icon toggle-password" onclick="togglePassword('loginPassword')">
-                                            <i class="fas fa-eye"></i>
+                                        <span class="input-group-text">
+                                            <i class="fas fa-lock"></i>
                                         </span>
+                                        <input type="password" class="form-control" name="password" placeholder="Enter your password" id="loginPassword" required>
+                                        <button type="button" class="toggle-password" onclick="togglePassword('loginPassword')">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <div class="form-text text-end">
+                                        <a href="#" class="text-decoration-none">Forgot password?</a>
                                     </div>
                                 </div>
-                                <button class="btn btn-primary mt-3">
-                                    <i class="fas fa-sign-in-alt me-2"></i>Login
+                                <button class="btn btn-primary mt-2 py-3" type="submit">
+                                    <i class="fas fa-sign-in-alt me-2"></i>Sign In
                                 </button>
                             </form>
                             
@@ -279,7 +350,7 @@
     <script>
         function togglePassword(inputId) {
             const passwordInput = document.getElementById(inputId);
-            const icon = passwordInput.parentElement.querySelector('.toggle-password i');
+            const icon = event.currentTarget.querySelector('i');
             
             if (passwordInput.type === 'password') {
                 passwordInput.type = 'text';
@@ -298,13 +369,11 @@
             
             formInputs.forEach(input => {
                 input.addEventListener('focus', function() {
-                    this.parentElement.classList.add('focused');
+                    this.parentElement.parentElement.classList.add('focused');
                 });
                 
                 input.addEventListener('blur', function() {
-                    if (this.value === '') {
-                        this.parentElement.classList.remove('focused');
-                    }
+                    this.parentElement.parentElement.classList.remove('focused');
                 });
             });
         });
