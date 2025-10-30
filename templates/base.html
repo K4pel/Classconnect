@@ -66,6 +66,16 @@
               </a>
             </li>
 
+            <!-- Study Groups Link -->
+            <li class="nav-item">
+              <a class="nav-link" href="/study_groups">
+                <div class="nav-icon">
+                  <i class="fas fa-graduation-cap"></i>
+                  <span class="nav-label">Study Groups</span>
+                </div>
+              </a>
+            </li>
+
             <!-- User Dropdown -->
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle user-dropdown" href="#" id="userMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -140,24 +150,24 @@
 
     <style>
 :root {
-  --cc-primary: #4361ee;
-  --cc-secondary: #3a0ca3;
+  --cc-primary: #fafafa;
+  --cc-secondary: #ffffff;
   --cc-accent: #7209b7;
   --cc-success: #4cc9f0;
   --cc-warning: #f72585;
   --cc-light: #f8f9fa;
   --cc-dark: #212529;
-  --cc-text: #333333;
-  --cc-text-light: #6c757d;
-  --cc-border: #dee2e6;
-  --cc-gradient: linear-gradient(135deg, var(--cc-primary), var(--cc-accent));
-  --cc-card-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  --cc-text: #262626;
+  --cc-text-light: #8e8e8e;
+  --cc-border: #dbdbdb;
+  --cc-gradient: linear-gradient(135deg, #4361ee, #3a0ca3);
+  --cc-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   --cc-transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 [data-theme="dark"] {
-  --cc-primary: #4895ef;
-  --cc-secondary: #560bad;
+  --cc-primary: #121212;
+  --cc-secondary: #1e1e1e;
   --cc-accent: #b5179e;
   --cc-success: #4cc9f0;
   --cc-warning: #f72585;
@@ -166,7 +176,7 @@
   --cc-text: #e9ecef;
   --cc-text-light: #adb5bd;
   --cc-border: #495057;
-  --cc-card-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  --cc-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 /* Theme Toggle */
@@ -183,7 +193,7 @@
 }
 
 #themeToggle:hover {
-  color: var(--cc-primary);
+  color: #0095f6;
   transform: rotate(15deg);
 }
 
@@ -208,14 +218,14 @@
 
 .alert-info {
   background: rgba(67, 97, 238, 0.2);
-  color: var(--cc-primary);
-  border-left: 4px solid var(--cc-primary);
+  color: #4361ee;
+  border-left: 4px solid #4361ee;
 }
 
 .alert-warning {
   background: rgba(247, 37, 133, 0.2);
-  color: var(--cc-warning);
-  border-left: 4px solid var(--cc-warning);
+  color: #f72585;
+  border-left: 4px solid #f72585;
 }
 
 .alert-danger {
@@ -242,10 +252,10 @@
 
 /* Modern Navigation Styles */
 .navbar-classconnect {
-  background: var(--cc-light) !important;
+  background: var(--cc-secondary) !important;
   border-bottom: 1px solid var(--cc-border);
   padding: 12px 0;
-  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   position: sticky;
   top: 0;
   z-index: 1000;
@@ -367,7 +377,7 @@
 }
 
 .user-dropdown:hover {
-  border-color: var(--cc-primary);
+  border-color: #0095f6;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
 }
@@ -417,7 +427,7 @@
   box-shadow: var(--cc-card-shadow);
   padding: 12px;
   margin-top: 12px !important;
-  background: var(--cc-light);
+  background: var(--cc-secondary);
   backdrop-filter: blur(10px);
   transform-origin: top center;
   animation: dropdownScale 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -459,12 +469,12 @@
 
 .dropdown-item:hover {
   background: rgba(67, 97, 238, 0.1);
-  color: var(--cc-primary);
+  color: #4361ee;
   transform: translateX(5px);
 }
 
 .dropdown-item:hover i {
-  color: var(--cc-primary);
+  color: #4361ee;
 }
 
 .dropdown-item.text-danger:hover {
@@ -550,7 +560,7 @@
 
 /* Main Content */
 .main-content {
-  background: var(--cc-light);
+  background: var(--cc-primary);
   min-height: calc(100vh - 80px);
   padding-bottom: 2rem;
 }
@@ -712,7 +722,7 @@
 /* Focus states for accessibility */
 .nav-link:focus,
 .dropdown-item:focus {
-  outline: 2px solid var(--cc-primary);
+  outline: 2px solid #0095f6;
   outline-offset: 2px;
 }
 
@@ -731,7 +741,7 @@
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--cc-primary);
+  background: #0095f6;
 }
 
 /* Animation for all interactive elements */

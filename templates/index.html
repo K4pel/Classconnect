@@ -229,6 +229,14 @@
 
 <style>
 :root {
+  --ig-primary: #fafafa;
+  --ig-secondary: #ffffff;
+  --ig-border: #dbdbdb;
+  --ig-text: #262626;
+  --ig-text-light: #8e8e8e;
+  --ig-blue: #0095f6;
+  --ig-blue-hover: #1877f2;
+  --ig-story-gradient: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
   --primary: #4361ee;
   --secondary: #3a0ca3;
   --accent: #7209b7;
@@ -276,13 +284,14 @@
 
 .hero-actions-modern .btn {
   font-weight: 600;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
+  border-radius: 8px;
 }
 
 .hero-actions-modern .btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 7px 20px rgba(0, 0, 0, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .hero-actions-modern .btn:first-child {
@@ -302,11 +311,12 @@
 
 .chat-preview-modern {
   background: white;
-  border-radius: 20px;
+  border-radius: 16px;
   overflow: hidden;
   color: var(--dark);
   transform: rotate(2deg);
   transition: transform 0.5s ease;
+  border: 1px solid var(--ig-border);
 }
 
 .chat-preview-modern:hover {
@@ -318,7 +328,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 15px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--ig-border);
   background: white;
 }
 
@@ -382,12 +392,13 @@
 .chat-footer-modern {
   padding: 15px;
   background: white;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--ig-border);
 }
 
 .chat-footer-modern .form-control {
-  border: 1px solid var(--border);
+  border: 1px solid var(--ig-border);
   padding: 10px 20px;
+  border-radius: 24px;
 }
 
 .chat-footer-modern .btn {
@@ -396,20 +407,29 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  background: var(--ig-blue);
+  border: none;
+  border-radius: 50%;
+}
+
+.chat-footer-modern .btn:hover {
+  background: var(--ig-blue-hover);
 }
 
 /* Stats Section */
 .stats-section {
-  background: linear-gradient(to bottom, #f8f9fa, #ffffff);
+  background: var(--ig-primary);
 }
 
 .stat-card {
   transition: all 0.3s ease;
+  border: 1px solid var(--ig-border);
+  border-radius: 12px;
 }
 
 .stat-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
 }
 
 .stat-icon {
@@ -424,25 +444,27 @@
 
 .feature-card-modern {
   transition: all 0.3s ease;
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--ig-border);
+  border-radius: 12px;
 }
 
 .feature-card-modern:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1) !important;
-  border-color: rgba(0, 0, 0, 0.08);
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+  border-color: var(--ig-border);
 }
 
 .feature-icon-modern {
   transition: all 0.3s ease;
+  border-radius: 12px !important;
 }
 
 .feature-card-modern:hover .feature-icon-modern {
-  transform: scale(1.1);
+  transform: scale(1.05);
 }
 
 .hover-lift:hover {
-  transform: translateY(-5px);
+  transform: translateY(-2px);
 }
 
 /* CTA Section */
@@ -450,6 +472,8 @@
   background: var(--gradient);
   position: relative;
   overflow: hidden;
+  border-radius: 16px;
+  margin: 2rem 0;
 }
 
 .cta-section::before {
@@ -470,9 +494,9 @@
 
 /* Admin Alert */
 .admin-alert-section .alert {
-  border-radius: 15px;
-  border: none;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  border: 1px solid var(--ig-border);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 /* Responsive */
@@ -574,7 +598,7 @@
   }
   
   .chat-preview-modern {
-    border-radius: 15px;
+    border-radius: 12px;
   }
   
   .chat-header-modern {

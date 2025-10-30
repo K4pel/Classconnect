@@ -139,58 +139,73 @@
 
 <!-- Custom Styles -->
 <style>
+:root {
+    --ig-primary: #fafafa;
+    --ig-secondary: #ffffff;
+    --ig-border: #dbdbdb;
+    --ig-text: #262626;
+    --ig-text-light: #8e8e8e;
+    --ig-blue: #0095f6;
+    --ig-blue-hover: #1877f2;
+    --ig-story-gradient: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+}
+
 .profile-avatar {
     width: 120px;
     height: 120px;
     object-fit: cover;
     border: 4px solid #fff;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
 .profile-avatar-placeholder {
     width: 120px;
     height: 120px;
     border: 4px solid #fff;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
 .card {
-    border-radius: 20px;
+    border-radius: 16px;
     overflow: hidden;
+    border: 1px solid var(--ig-border);
 }
 
 .card-header {
-    background: linear-gradient(135deg, rgba(67, 97, 238, 0.1), rgba(114, 9, 183, 0.1));
+    background: var(--ig-secondary);
+    border-bottom: 1px solid var(--ig-border);
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #4361ee, #7209b7);
+    background: var(--ig-blue);
     border: none;
     padding: 12px 20px;
     font-weight: 600;
     transition: all 0.3s ease;
+    border-radius: 8px;
 }
 
 .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 7px 20px rgba(67, 97, 238, 0.3);
+    background: var(--ig-blue-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 149, 246, 0.3);
 }
 
 .form-control-lg {
     padding: 15px 20px;
-    border-radius: 12px;
-    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    border: 1px solid var(--ig-border);
     transition: all 0.3s ease;
 }
 
 .form-control-lg:focus {
-    border-color: #4361ee;
-    box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
+    border-color: var(--ig-blue);
+    box-shadow: 0 0 0 0.25rem rgba(0, 149, 246, 0.25);
 }
 
 .form-label {
     margin-bottom: 8px;
-    color: #495057;
+    color: var(--ig-text);
 }
 
 .badge {
@@ -199,7 +214,7 @@
 }
 
 .shadow-sm {
-    box-shadow: 0 5px 20px rgba(0,0,0,0.08) !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
 }
 
 /* Responsive adjustments */
