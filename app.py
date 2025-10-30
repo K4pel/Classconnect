@@ -500,6 +500,7 @@ def profile():
     
     if request.method == 'POST':
         current_password = request.form.get('current_password', '').strip()
+        new_username = request.form.get('new_username', '').strip()
         new_password = request.form.get('new_password', '').strip()
         avatar = request.files.get('avatar')
         
@@ -507,7 +508,7 @@ def profile():
         cur = db.cursor()
         
         # Verify current password before making changes
-        if new_password or avatar:
+        if new_username or new_password or avatar:
             if not current_password:
                 flash('Current password is required to make changes.', 'danger')
                 return render_template('profile.html', user=user)
@@ -517,6 +518,21 @@ def profile():
                 return render_template('profile.html', user=user)
         
         updates = []
+        
+        # Update username if provided and different
+        if new_username and new_username != user['username']:
+            # Check if username is already taken
+            cur.execute('SELECT id FROM users WHERE username = ? AND id != ?', 
+                       (new_username, user['id']))
+            if cur.fetchone():
+                flash('Username is already taken. Please choose another one.', 'danger')
+                return render_template('profile.html', user=user)
+            
+            cur.execute('UPDATE users SET username = ? WHERE id = ?', 
+                       (new_username, user['id']))
+            updates.append('username')
+            # Update session username
+            session['username'] = new_username
         
         if new_password:
             if len(new_password) < 8:
@@ -540,7 +556,7 @@ def profile():
             flash('Profile updated successfully!', 'success')
             # Refresh user data
             user = get_user_by_id(user['id'])
-        elif new_password or avatar:
+        elif new_username or new_password or avatar:
             flash('No changes were made due to validation errors.', 'info')
         else:
             flash('No changes were made.', 'info')
